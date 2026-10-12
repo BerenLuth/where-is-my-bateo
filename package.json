@@ -1,0 +1,12 @@
+{
+  "name": "actv-live",
+  "private": true,
+  "workspaces": ["server", "web"],
+  "scripts": {
+    "dev": "concurrently -n server,web -c blue,green \"npm run dev -w server\" \"npm run dev -w web\"",
+    "test": "npm test -w server",
+    "dev:host": "concurrently -n server,web -c blue,green \"npm run dev -w server\" \"npm run dev:host -w web\"",
+    "build": "npm run build -w web"
+  },
+  "devDependencies": { "concurrently": "^9.0.0" }
+}

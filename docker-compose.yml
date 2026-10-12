@@ -1,0 +1,19 @@
+services:
+  actv-live:
+    build:
+      context: .
+      args:
+        # VITE_TILE_URL: https://api.maptiler.com/maps/streets/256/{z}/{x}/{y}.png?key=YOUR_KEY
+        # VITE_TILE_ATTRIBUTION: © MapTiler © OpenStreetMap contributors · dati ACTV
+        VITE_TILE_URL: ""
+    image: actv-live
+    # Share the host's network stack: the app listens on the host's port directly (Linux only).
+    network_mode: host
+    environment:
+      PORT: ${PORT:-8080}
+    volumes:
+      - actv-cache:/data
+    restart: unless-stopped
+
+volumes:
+  actv-cache:
