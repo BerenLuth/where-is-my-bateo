@@ -42,6 +42,19 @@ app.get('/api/shapes/:id', (req, res) => {
 
 // In production the same process serves the built web app.
 const webDist = process.env.WEB_DIST ?? path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'web', 'dist');
-if (fs.existsSync(webDist)) app.use(express.static(webDist));
+if (fs.existsSync(webDist)) {
+  app.use(
+    express.static(webDist, {
+      setHeaders(res, file) {
+        // The service worker and manifest must be revalidated on every load so updates reach installed apps.
+        if (/(^|[\\/])(sw\.js|workbox-[^\\/]*\.js|manifest\.webmanifest|registerSW\.js)$/.test(file)) {
+          res.setHeader('Cache-Control', 'no-cache');
+        } else if (file.includes(`${path.sep}assets${path.sep}`)) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // hashed filenames
+        }
+      },
+    }),
+  );
+}
 
 app.listen(PORT, () => console.log(`Where Is My Bateo server on http://localhost:${PORT}`));

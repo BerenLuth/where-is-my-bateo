@@ -22,6 +22,8 @@ export function useTheme() {
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
+    // Colours the browser/status bar and the installed app's title bar; matches --card in styles.css.
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#1b212b' : '#ffffff');
     try {
       localStorage.setItem(KEY, theme);
     } catch {

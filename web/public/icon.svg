@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#1a6aa6"/>
+  <!-- boat, kept inside the central 80% so it survives maskable cropping -->
+  <rect x="226" y="120" width="12" height="70" rx="4" fill="#fff"/>
+  <path d="M238 124h70l-14 24 14 24h-70z" fill="#ffd24a"/>
+  <rect x="190" y="190" width="132" height="64" rx="12" fill="#fff"/>
+  <rect x="210" y="208" width="26" height="22" rx="4" fill="#1a6aa6"/>
+  <rect x="248" y="208" width="26" height="22" rx="4" fill="#1a6aa6"/>
+  <rect x="286" y="208" width="20" height="22" rx="4" fill="#1a6aa6"/>
+  <path d="M140 270h232l-32 66H172z" fill="#fff"/>
+  <path d="M120 372q34 -26 68 0t68 0 68 0 68 0" fill="none" stroke="#fff" stroke-width="16" stroke-linecap="round"/>
+</svg>

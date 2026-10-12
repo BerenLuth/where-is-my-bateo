@@ -5,7 +5,7 @@ import { Panel } from './Panel';
 import { SearchBox } from './SearchBox';
 import { matches, type Selection } from './search';
 import { t } from './i18n';
-import { useNow, useSnapshot } from './useSnapshot';
+import { useNow, useOnline, useSnapshot } from './useSnapshot';
 import { useTheme } from './useTheme';
 
 const MAX_SHAPES = 6;
@@ -14,11 +14,14 @@ export function App() {
   const { loaded, error, busy, refresh, cooldownUntil } = useSnapshot();
   const skew = loaded?.skew ?? 0;
   const now = useNow(skew);
+  const online = useOnline();
+  const errorText = online ? t.loadError : t.offline;
   const { theme, toggle: toggleTheme } = useTheme();
   const [selection, setSelection] = useState<Selection | null>(null);
   const [pickedVehicle, setPickedVehicle] = useState<string | null>(null);
   const [showGhosts, setShowGhosts] = useState(true);
   const [showOut, setShowOut] = useState(false);
+  const [optionsOpen, setOptionsOpen] = useState(false); // bottom sheet on small screens; always visible on desktop
   const [kinds, setKinds] = useState<Record<VehicleKind, boolean>>({ bus: true, tram: true, boat: true });
   const [focus, setFocus] = useState<Focus | null>(null);
   const [shapes, setShapes] = useState<ShapeOverlay[]>([]);
@@ -112,6 +115,15 @@ export function App() {
           <button onClick={refresh} disabled={busy || cooling} title={t.refresh} aria-label={t.refresh}>
             <span className={busy ? 'spin' : ''}>⟳</span>
           </button>
+          <button
+            className="opts"
+            onClick={() => setOptionsOpen((o) => !o)}
+            aria-expanded={optionsOpen}
+            aria-label={t.options}
+            title={t.options}
+          >
+            ⚙
+          </button>
         </div>
       </header>
 
@@ -129,8 +141,8 @@ export function App() {
             onSelect={pickVehicle}
           />
         )}
-        {!snapshot && <div className="splash">{error ? t.loadError : t.loading}</div>}
-        {snapshot && error && <div className="toast">{t.loadError}</div>}
+        {!snapshot && <div className="splash">{error || !online ? errorText : t.loading}</div>}
+        {snapshot && (error || !online) && <div className="toast">{errorText}</div>}
 
         <Panel
           selection={selection}
@@ -142,7 +154,17 @@ export function App() {
           onClear={clear}
         />
 
-        <div className="legend">
+        {optionsOpen && <div className="backdrop" onClick={() => setOptionsOpen(false)} />}
+        <div className={`legend${optionsOpen ? ' open' : ''}`}>
+          <div className="legend-head">
+            <strong>{t.optionsTitle}</strong>
+            <button onClick={() => setOptionsOpen(false)} aria-label={t.clearSelection}>✕</button>
+          </div>
+          {snapshot && (
+            <div className="legend-status muted">
+              {t.vehiclesCount(inService)} · <span className={feedAge > 120 ? 'warn-text' : ''}>{t.updatedAgo(feedAge)}</span>
+            </div>
+          )}
           <label><input type="checkbox" checked={showGhosts} onChange={(e) => setShowGhosts(e.target.checked)} /> {t.showGhosts}</label>
           <label><input type="checkbox" checked={showOut} onChange={(e) => setShowOut(e.target.checked)} /> {t.showOutOfService}</label>
           <div className="kinds">

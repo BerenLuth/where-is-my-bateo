@@ -14,6 +14,8 @@ Data comes from ACTV's open data catalogue: [actv.avmspa.it](https://actv.avmspa
 - **Search** by line (`24H`, `T1`), fleet number (`587`) or destination (`Piazzale Roma`). A line shows all its vehicles and its route; a vehicle opens a card with delay, next stop and expected arrival.
 - **Ghosts:** a lighter marker moves along the route toward the next stop, timed to its expected arrival, and glides to the real position on each update. Positions older than 2 minutes are greyed out and get no ghost.
 - **Dark theme:** the ☾/☀ button in the header switches to a dark theme with a plain dark basemap (the standard tiles desaturated and inverted in the browser, so no API key is needed). It follows your system setting at first and remembers your choice; `?theme=dark` or `?theme=light` in the URL overrides it.
+- **Mobile layout:** on small screens the search box and the ☾ / ⟳ / ⚙ buttons share one row; ⚙ opens a bottom sheet with the toggles (estimated positions, out-of-service, Bus / Tram / Battelli), the vehicle count and the feed age. Selecting a line or vehicle opens a bottom panel; pinch to zoom.
+- **Installable (PWA):** can be installed to the home screen / desktop as a standalone app; see [Install as an app](#install-as-an-app-pwa).
 - **Refresh:** polls every 30 s; the refresh button has a 5 s cooldown. Out-of-service vehicles are hidden unless you toggle them on. While the server is still starting, the page retries every 3 s.
 
 ## Quick start
@@ -31,6 +33,17 @@ npm run build        # production build of the web app into web/dist
 The first start downloads and parses ACTV's static GTFS (~10–20 s); until the server is ready the page shows "Caricamento dati…" and retries every 3 s.
 
 For phone testing, run `npm run dev:host` and open the `Network:` URL Vite prints (e.g. `http://192.168.1.25:5173`). The phone only talks to Vite, which forwards `/api` to the server, so port 3001 needn't be exposed. If the page doesn't load, check that your firewall allows port 5173.
+
+## Install as an app (PWA)
+
+The production build is a Progressive Web App: a manifest, icons and a service worker that precaches the app shell, so it opens instantly and can be installed.
+
+- **Needs HTTPS** (or `localhost`). Browsers only register service workers and offer installation in a secure context, so the plain-HTTP LAN address (`http://192.168.x.x:8080`, or `npm run dev:host`) works as a normal web page but is not installable. For phone testing use the `cloudflared` HTTPS tunnel below, or any HTTPS deployment.
+- **Android (Chrome):** menu → *Install app* / *Add to Home screen*.
+- **iOS (Safari):** Share → *Add to Home Screen*.
+- **Desktop (Chrome/Edge):** the install icon in the address bar.
+- **What is cached:** the app shell, route shapes and a small number of recently viewed map tiles. **Live positions are never cached**, so stale data can't pass for live; offline you see the shell and an "offline" notice.
+- The service worker is only built for production (`npm run build`, Docker); it is disabled in `npm run dev`. Updates are picked up automatically on the next launch.
 
 ## Run with Docker
 
@@ -71,6 +84,7 @@ ACTV feeds ──► server (Node/Express) ──► /api/snapshot ──► web
 | Feed URLs, adding a new feed, realtime cache time, static refresh interval | `server/src/feeds.ts` |
 | Poll and retry intervals, refresh cooldown, delay thresholds, stale-fix age, ghost glide time, map centre, tile URLs | `web/src/config.ts` |
 | Marker, arrow and theme styling | `web/src/styles.css` |
+| PWA manifest (name, colours, icons) and caching rules | `web/vite.config.ts` |
 | UI strings (add an `en` dictionary here to translate) | `web/src/i18n/` |
 | Server port, cache directory, web build directory | env `PORT` (3001), `CACHE_DIR`, `WEB_DIST` |
 | Tile providers | build-time `VITE_TILE_URL`, `VITE_TILE_ATTRIBUTION`, `VITE_TILE_URL_DARK`, `VITE_TILE_ATTRIBUTION_DARK` |
@@ -80,6 +94,7 @@ ACTV feeds ──► server (Node/Express) ──► /api/snapshot ──► web
 ```
 server/src/   index.ts (API, serves web/dist)  realtime.ts (fetch + cache)  snapshot.ts (join, delay, ghosts)
               static.ts (GTFS loader)  geo.ts (shape projection)  feeds.ts  types.ts  *.test.ts
+web/public/   icon.svg + generated PWA icons (pwa-192/512, maskable, apple-touch-icon)
 web/src/      App.tsx  MapView.tsx  SearchBox.tsx  Panel.tsx  useSnapshot.ts  useTheme.ts
               delay.ts  search.ts  config.ts  styles.css  i18n/
 Dockerfile, docker-compose.yml, GLOSSARY.md

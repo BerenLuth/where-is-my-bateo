@@ -48,6 +48,22 @@ export function useSnapshot() {
   return { loaded, error, busy, refresh, cooldownUntil };
 }
 
+/** Tracks the browser's online/offline state. */
+export function useOnline(): boolean {
+  const [online, setOnline] = useState(() => navigator.onLine);
+  useEffect(() => {
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    addEventListener('online', on);
+    addEventListener('offline', off);
+    return () => {
+      removeEventListener('online', on);
+      removeEventListener('offline', off);
+    };
+  }, []);
+  return online;
+}
+
 /** Re-renders every second and returns the current time in seconds. */
 export function useNow(skew = 0): number {
   const [now, setNow] = useState(() => Date.now() / 1000);

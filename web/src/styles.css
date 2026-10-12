@@ -33,7 +33,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .chip.plain { background: var(--line); color: var(--fg); }
 
 main { position: relative; flex: 1; min-height: 0; }
-.map { position: absolute; inset: 0; }
+.map { position: absolute; inset: 0; z-index: 0; /* own stacking context: panels and sheets sit above map controls */ }
 .splash { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); }
 .toast { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: var(--warn-bg); padding: 6px 12px; border-radius: 8px; z-index: 900; }
 
@@ -82,9 +82,37 @@ main { position: relative; flex: 1; min-height: 0; }
 .veh .badge.d-verylate { background: var(--verylate); color: #fff; }
 .veh .badge.d-early { background: var(--early); color: #fff; }
 
+.opts, .legend-head { display: none; }
+.legend-status { display: none; }
+.backdrop { display: none; }
+.app { height: 100%; }
+@supports (height: 100dvh) { .app { height: 100dvh; } }
+
 @media (max-width: 700px) {
-  .bar { flex-wrap: wrap; } .bar h1 { display: none; } .search { max-width: none; }
-  .status span:first-child { display: none; }
-  .panel { top: auto; bottom: 0; left: 0; right: 0; width: auto; max-height: 42%; border-radius: 12px 12px 0 0; }
+  .bar { gap: 6px; padding: 8px 10px; padding-top: max(8px, env(safe-area-inset-top)); }
+  .bar h1 { display: none; }
+  .search { max-width: none; min-width: 0; }
+  .search input { font-size: 16px; /* stops iOS zooming on focus */ }
+  .status { margin-left: 0; gap: 6px; }
+  .status > span { display: none; } /* count and feed age live in the options sheet */
+  .status button, .opts { width: 40px; height: 40px; flex: none; }
+  .opts { display: inline-block; border: 1px solid var(--line); background: var(--card); border-radius: 6px; font-size: 18px; }
+  .leaflet-control-zoom { display: none; } /* pinch to zoom */
+
+  .panel { top: auto; bottom: 0; left: 0; right: 0; width: auto; max-height: 42%; border-radius: 12px 12px 0 0; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+
   .legend { display: none; }
+  .legend.open {
+    display: grid; gap: 10px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 1100; font-size: 15px;
+    border-radius: 14px 14px 0 0; padding: 14px 16px max(16px, env(safe-area-inset-bottom));
+    max-height: 75%; overflow: auto; box-shadow: 0 -6px 24px #0004;
+  }
+  .legend-head { display: flex; justify-content: space-between; align-items: center; }
+  .legend-head button { border: 0; background: none; font-size: 18px; padding: 6px 8px; color: var(--muted); }
+  .legend-status { display: block; }
+  .legend label { display: flex; align-items: center; gap: 10px; min-height: 36px; }
+  .legend input[type='checkbox'] { width: 20px; height: 20px; }
+  .kinds { gap: 18px; flex-wrap: wrap; }
+  .keys { font-size: 13px; }
+  .backdrop { display: block; position: fixed; inset: 0; z-index: 1050; background: #0005; }
 }
