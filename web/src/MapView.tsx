@@ -1,8 +1,17 @@
 import L from 'leaflet';
 import { useEffect, useRef } from 'react';
 import type { LatLon, Line, Vehicle } from './api';
-import { GHOST_GLIDE_MS, MAP_CENTER, STALE_FIX_SECONDS, TILE_ATTRIBUTION, TILE_URL } from './config';
+import {
+  GHOST_GLIDE_MS,
+  MAP_CENTER,
+  STALE_FIX_SECONDS,
+  TILE_ATTRIBUTION,
+  TILE_ATTRIBUTION_DARK,
+  TILE_URL,
+  TILE_URL_DARK,
+} from './config';
 import { delayBadge, delayClass } from './delay';
+import type { Theme } from './useTheme';
 
 export interface Focus {
   nonce: number;
@@ -19,6 +28,7 @@ interface Props {
   vehicles: Vehicle[];
   lines: Map<string, Line>;
   showGhosts: boolean;
+  theme: Theme;
   selectedId: string | null;
   /** Add to the client clock (seconds) to get server time. */
   skew: number;
@@ -93,10 +103,11 @@ function pointOnPath(p: GhostPath, f: number): L.LatLng {
   return L.latLng(a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1]));
 }
 
-export function MapView({ vehicles, lines, showGhosts, selectedId, skew, focus, shapes, onSelect }: Props) {
+export function MapView({ vehicles, lines, showGhosts, theme, selectedId, skew, focus, shapes, onSelect }: Props) {
   const el = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const layerRef = useRef<L.LayerGroup | null>(null);
+  const tileRef = useRef<L.TileLayer | null>(null);
   const shapeLayerRef = useRef<L.LayerGroup | null>(null);
   const entries = useRef(new Map<string, Entry>());
   const skewRef = useRef(skew);
@@ -107,10 +118,6 @@ export function MapView({ vehicles, lines, showGhosts, selectedId, skew, focus, 
   // Map lifecycle and the ghost animation loop.
   useEffect(() => {
     const map = L.map(el.current!, { center: MAP_CENTER, zoom: 11, zoomControl: true });
-    L.tileLayer(TILE_URL, {
-      maxZoom: 19,
-      attribution: TILE_ATTRIBUTION,
-    }).addTo(map);
     shapeLayerRef.current = L.layerGroup().addTo(map);
     layerRef.current = L.layerGroup().addTo(map);
     mapRef.current = map;
@@ -161,8 +168,25 @@ export function MapView({ vehicles, lines, showGhosts, selectedId, skew, focus, 
       entries.current.clear();
       map.remove();
       mapRef.current = null;
+      tileRef.current = null;
     };
   }, []);
+
+  // Basemap follows the theme: standard tiles in light, a plain dark style in dark.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    tileRef.current?.remove();
+    const dark = theme === 'dark';
+    const restyle = dark && !TILE_URL_DARK; // no dark provider configured: darken the standard tiles
+    tileRef.current = L.tileLayer((dark && TILE_URL_DARK) || TILE_URL, {
+      maxZoom: 19,
+      className: restyle ? 'tiles-dark' : '',
+      attribution: dark ? TILE_ATTRIBUTION_DARK : TILE_ATTRIBUTION,
+    })
+      .addTo(map)
+      .bringToBack();
+  }, [theme]);
 
   // Sync markers with the vehicle list.
   useEffect(() => {

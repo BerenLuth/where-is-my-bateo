@@ -1,10 +1,12 @@
 :root {
   --bg: #ffffff; --fg: #1c2330; --muted: #6b7587; --line: #dde2ea; --card: #ffffff;
   --ok: #1a8f4c; --late: #c27a00; --verylate: #d12f2f; --early: #2b6fd6; --warn-bg: #fff4d6;
-  color-scheme: light dark;
+  color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root { --bg: #151a22; --fg: #e8ecf3; --muted: #98a2b5; --line: #2c3544; --card: #1d2430; --warn-bg: #3a2f10; }
+:root[data-theme='dark'] {
+  --bg: #12161d; --fg: #e8ecf3; --muted: #98a2b5; --line: #2c3544; --card: #1b212b; --warn-bg: #3a2f10;
+  --ok: #3ecf7a; --late: #f0a020; --verylate: #ff6b6b; --early: #5b9cff;
+  color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; }
@@ -14,7 +16,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .bar { display: flex; gap: 12px; align-items: center; padding: 8px 12px; background: var(--card); border-bottom: 1px solid var(--line); z-index: 1000; }
 .bar h1 { font-size: 16px; margin: 0; white-space: nowrap; }
 .status { display: flex; gap: 12px; align-items: center; margin-left: auto; color: var(--muted); white-space: nowrap; }
-.status button { border: 1px solid var(--line); background: var(--card); border-radius: 6px; width: 32px; height: 32px; font-size: 18px; }
+.status button, .status .theme { border: 1px solid var(--line); background: var(--card); border-radius: 6px; width: 32px; height: 32px; font-size: 18px; }
 .status button:disabled { opacity: .5; cursor: default; }
 .spin { display: inline-block; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -58,6 +60,9 @@ main { position: relative; flex: 1; min-height: 0; }
 .key.ghost { background: #e31e2466; border: 1px dashed #e31e24; }
 .key.stale { background: #999; }
 
+/* Plain dark basemap: strip the colour from the standard tiles, invert and dim them. */
+.tiles-dark { filter: grayscale(1) invert(1) brightness(0.8) contrast(0.95); }
+
 /* Markers */
 .veh-wrap { background: none; border: 0; }
 .veh { position: relative; width: 30px; height: 30px; margin: 2px; border-radius: 50%; background: var(--c); color: var(--t); display: grid; place-items: center; font: 700 11px/1 system-ui; border: 2px solid #fff; box-shadow: 0 0 0 1px #0004, 0 1px 4px #0006; }
@@ -67,8 +72,11 @@ main { position: relative; flex: 1; min-height: 0; }
 .veh.sel { outline: 3px solid #111; outline-offset: 1px; }
 .veh.stale { background: #999; color: #fff; opacity: .7; }
 .veh.ghost { background: color-mix(in srgb, var(--c) 35%, transparent); border: 2px dashed var(--c); color: var(--c); box-shadow: none; }
-.veh .arrow { position: absolute; inset: -9px; pointer-events: none; }
-.veh .arrow::after { content: ''; position: absolute; top: 0; left: 50%; margin-left: -5px; border: 5px solid transparent; border-bottom: 8px solid var(--c); }
+.veh .arrow { position: absolute; inset: -12px; pointer-events: none; filter: drop-shadow(0 1px 1.5px #0007); }
+/* White outline triangle underneath, line-coloured triangle on top: visible on any line colour and basemap. */
+.veh .arrow::before, .veh .arrow::after { content: ''; position: absolute; left: 50%; border-style: solid; border-color: transparent; }
+.veh .arrow::before { top: 0; margin-left: -8px; border-width: 0 8px 14px; border-bottom-color: #fff; }
+.veh .arrow::after { top: 3px; margin-left: -5.5px; border-width: 0 5.5px 10px; border-bottom-color: var(--c); }
 .veh .badge { position: absolute; right: -10px; bottom: -8px; padding: 0 4px; border-radius: 8px; color: #fff; font: 700 10px/14px system-ui; background: var(--ok); }
 .veh .badge.d-late { background: var(--late); color: #fff; }
 .veh .badge.d-verylate { background: var(--verylate); color: #fff; }

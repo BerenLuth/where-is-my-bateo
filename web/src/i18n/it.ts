@@ -1,5 +1,5 @@
 export const it = {
-  appName: 'ACTV Live',
+  appName: 'Where Is My Bateo',
   searchPlaceholder: 'Linea, numero vettura o destinazione…',
   groupLines: 'Linee',
   groupVehicles: 'Vetture',
@@ -9,6 +9,8 @@ export const it = {
   vehiclesCount: (n: number) => `${n} ${n === 1 ? 'vettura' : 'vetture'}`,
   updatedAgo: (s: number) => `aggiornato ${s} s fa`,
   refresh: 'Aggiorna',
+  switchToDark: 'Tema scuro',
+  switchToLight: 'Tema chiaro',
   loading: 'Caricamento dati…',
   loadError: 'Dati non disponibili. Riprovo a breve.',
   showGhosts: 'Mostra posizioni stimate',

@@ -1,4 +1,4 @@
-# ACTV Live
+# Where Is My Bateo
 
 > **Vibe-coded:** this project was built by prompting an AI coding assistant (Claude Code), not hand-written line by line. The server logic has unit tests, but the web UI has none and it has had only light manual testing. Expect rough edges and read the code before relying on it.
 
@@ -8,11 +8,13 @@ Data comes from ACTV's open data catalogue: [actv.avmspa.it](https://actv.avmspa
 
 ## Features
 
-- **Live map** of buses, trams and boats, coloured with each line's own colour. A Bus / Tram / Battelli filter is in the legend.
+- **Live map** of buses, trams and boats, coloured with each line's own colour. Buses are circles, trams rounded squares and boats hull-shaped; a Bus / Tram / Battelli filter is in the legend.
+- **Direction arrow** on each marker shows the vehicle's heading, outlined in white so it reads on any colour and on both themes.
 - **Delay badge** on every vehicle: green up to 3 min late, amber up to 5, red beyond, blue when early.
 - **Search** by line (`24H`, `T1`), fleet number (`587`) or destination (`Piazzale Roma`). A line shows all its vehicles and its route; a vehicle opens a card with delay, next stop and expected arrival.
 - **Ghosts:** a lighter marker moves along the route toward the next stop, timed to its expected arrival, and glides to the real position on each update. Positions older than 2 minutes are greyed out and get no ghost.
-- **Refresh:** polls every 30 s; the refresh button has a 5 s cooldown. Out-of-service vehicles are hidden unless you toggle them on.
+- **Dark theme:** the ☾/☀ button in the header switches to a dark theme with a plain dark basemap (the standard tiles desaturated and inverted in the browser, so no API key is needed). It follows your system setting at first and remembers your choice; `?theme=dark` or `?theme=light` in the URL overrides it.
+- **Refresh:** polls every 30 s; the refresh button has a 5 s cooldown. Out-of-service vehicles are hidden unless you toggle them on. While the server is still starting, the page retries every 3 s.
 
 ## Quick start
 
@@ -45,7 +47,7 @@ One container serves both the API and the web app. It needs about 400 MB of RAM 
 - Over the internet without opening ports: `cloudflared tunnel --url http://localhost:8080` prints a public https link.
 - On a server or small VPS: copy the repo, run the same `docker compose` command and put Caddy or nginx in front for HTTPS.
 
-**Map tiles:** the default uses the public OpenStreetMap tile servers, which is fine for a few friends but not for public traffic. To use another provider, set `VITE_TILE_URL` and `VITE_TILE_ATTRIBUTION` under `build.args` in `docker-compose.yml` and rebuild.
+**Map tiles:** the default uses the public OpenStreetMap tile servers, which is fine for a few friends but not for public traffic. To use another provider, set `VITE_TILE_URL` and `VITE_TILE_ATTRIBUTION` (and `VITE_TILE_URL_DARK` / `VITE_TILE_ATTRIBUTION_DARK` to use a real dark basemap instead of the built-in restyle) under `build.args` in `docker-compose.yml` and rebuild.
 
 ## How it works
 
@@ -56,7 +58,7 @@ ACTV feeds ──► server (Node/Express) ──► /api/snapshot ──► web
  static GTFS zip
 ```
 
-- **`server/`** decodes the vehiclePositions and tripUpdates protobufs and joins them with the static GTFS (lines, headsigns, stops, route shapes). It caches the realtime feeds for 20 s, so any number of viewers causes at most one upstream request per feed per 20 s, and reloads the static data every 24 h. The `aut` (bus/tram) and `nav` (boat) feeds are served merged from `/api/snapshot`; ids are prefixed with the feed (`aut:`, `nav:`) so they can't clash. If one feed is down the other is still served.
+- **`server/`** decodes the vehiclePositions and tripUpdates protobufs and joins them with the static GTFS (lines, headsigns, stops, route shapes). It caches the realtime feeds for 20 s, so any number of viewers causes at most one upstream request per feed per 20 s, and reloads the static data every 24 h. The `aut` (bus/tram) and `nav` (boat) feeds are served merged from `/api/snapshot` (plus `/api/shapes/:id` for route shapes and `/api/health`); ids are prefixed with the feed (`aut:`, `nav:`) so they can't clash. If one feed is down the other is still served.
 - **Delay** is the delay reported for the vehicle's next unserved stop in tripUpdates. Vehicles with no trip are out of service and have no line or delay.
 - **Ghosts** are computed on the server: the vehicle's position is projected onto its route shape and the path to the next stop is sent with the stop's expected arrival time. The browser interpolates along that path. The feed has no speed field, so this is how in-between positions are estimated.
 - **Boat trip ids:** the boat realtime feed says `AUT_ACTV_653_123` where the static data says `NAV_ACTV_653_123`; `server/src/feeds.ts` maps between them.
@@ -67,17 +69,19 @@ ACTV feeds ──► server (Node/Express) ──► /api/snapshot ──► web
 | What | Where |
 | --- | --- |
 | Feed URLs, adding a new feed, realtime cache time, static refresh interval | `server/src/feeds.ts` |
-| Poll interval, refresh cooldown, delay thresholds, stale-fix age, ghost glide time, map centre | `web/src/config.ts` |
+| Poll and retry intervals, refresh cooldown, delay thresholds, stale-fix age, ghost glide time, map centre, tile URLs | `web/src/config.ts` |
+| Marker, arrow and theme styling | `web/src/styles.css` |
 | UI strings (add an `en` dictionary here to translate) | `web/src/i18n/` |
 | Server port, cache directory, web build directory | env `PORT` (3001), `CACHE_DIR`, `WEB_DIST` |
-| Tile provider | build-time `VITE_TILE_URL`, `VITE_TILE_ATTRIBUTION` |
+| Tile providers | build-time `VITE_TILE_URL`, `VITE_TILE_ATTRIBUTION`, `VITE_TILE_URL_DARK`, `VITE_TILE_ATTRIBUTION_DARK` |
 
 ## Project layout
 
 ```
-server/src/   index.ts (API)  realtime.ts (fetch + cache)  snapshot.ts (join, delay, ghosts)
+server/src/   index.ts (API, serves web/dist)  realtime.ts (fetch + cache)  snapshot.ts (join, delay, ghosts)
               static.ts (GTFS loader)  geo.ts (shape projection)  feeds.ts  types.ts  *.test.ts
-web/src/      App.tsx  MapView.tsx  SearchBox.tsx  Panel.tsx  useSnapshot.ts  config.ts  i18n/
+web/src/      App.tsx  MapView.tsx  SearchBox.tsx  Panel.tsx  useSnapshot.ts  useTheme.ts
+              delay.ts  search.ts  config.ts  styles.css  i18n/
 Dockerfile, docker-compose.yml, GLOSSARY.md
 ```
 

@@ -12,6 +12,8 @@ COPY web web
 # Optional: use another tile provider instead of the public OpenStreetMap servers.
 ARG VITE_TILE_URL
 ARG VITE_TILE_ATTRIBUTION
+ARG VITE_TILE_URL_DARK
+ARG VITE_TILE_ATTRIBUTION_DARK
 RUN npm run build -w web
 
 # ---- runtime: one Node process serving the API and the built web app ----

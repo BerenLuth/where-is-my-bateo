@@ -6,6 +6,7 @@ import { SearchBox } from './SearchBox';
 import { matches, type Selection } from './search';
 import { t } from './i18n';
 import { useNow, useSnapshot } from './useSnapshot';
+import { useTheme } from './useTheme';
 
 const MAX_SHAPES = 6;
 
@@ -13,6 +14,7 @@ export function App() {
   const { loaded, error, busy, refresh, cooldownUntil } = useSnapshot();
   const skew = loaded?.skew ?? 0;
   const now = useNow(skew);
+  const { theme, toggle: toggleTheme } = useTheme();
   const [selection, setSelection] = useState<Selection | null>(null);
   const [pickedVehicle, setPickedVehicle] = useState<string | null>(null);
   const [showGhosts, setShowGhosts] = useState(true);
@@ -99,6 +101,14 @@ export function App() {
               <span className={feedAge > 120 ? 'warn-text' : ''}>{t.updatedAgo(feedAge)}</span>
             </>
           )}
+          <button
+            className="theme"
+            onClick={toggleTheme}
+            title={theme === 'dark' ? t.switchToLight : t.switchToDark}
+            aria-label={theme === 'dark' ? t.switchToLight : t.switchToDark}
+          >
+            {theme === 'dark' ? '☀' : '☾'}
+          </button>
           <button onClick={refresh} disabled={busy || cooling} title={t.refresh} aria-label={t.refresh}>
             <span className={busy ? 'spin' : ''}>⟳</span>
           </button>
@@ -111,6 +121,7 @@ export function App() {
             vehicles={visible}
             lines={lines}
             showGhosts={showGhosts}
+            theme={theme}
             selectedId={selectedVehicle?.id ?? null}
             skew={skew}
             focus={focus}

@@ -44,4 +44,4 @@ app.get('/api/shapes/:id', (req, res) => {
 const webDist = process.env.WEB_DIST ?? path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'web', 'dist');
 if (fs.existsSync(webDist)) app.use(express.static(webDist));
 
-app.listen(PORT, () => console.log(`ACTV Live server on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Where Is My Bateo server on http://localhost:${PORT}`));

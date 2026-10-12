@@ -20,4 +20,11 @@ export const DELAY_THRESHOLDS = {
 export const TILE_URL = import.meta.env.VITE_TILE_URL || 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 export const TILE_ATTRIBUTION = import.meta.env.VITE_TILE_ATTRIBUTION || '© OpenStreetMap · dati ACTV';
 
+/**
+ * Dark theme: by default the standard tiles are restyled in the browser (see `.tiles-dark` in styles.css),
+ * which needs no API key. Set `VITE_TILE_URL_DARK` to use a real dark basemap instead.
+ */
+export const TILE_URL_DARK: string | undefined = import.meta.env.VITE_TILE_URL_DARK || undefined;
+export const TILE_ATTRIBUTION_DARK = import.meta.env.VITE_TILE_ATTRIBUTION_DARK || TILE_ATTRIBUTION;
+
 export const MAP_CENTER: [number, number] = [45.49, 12.25];
