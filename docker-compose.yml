@@ -11,7 +11,7 @@ services:
     # Share the host's network stack: the app listens on the host's port directly (Linux only).
     network_mode: host
     environment:
-      PORT: ${PORT:-8080}
+      PORT: ${PORT:-3542}
     volumes:
       - actv-cache:/data
     restart: unless-stopped

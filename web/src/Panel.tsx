@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react';
 import type { Line, Vehicle } from './api';
 import { STALE_FIX_SECONDS } from './config';
 import { delayClass, delayLabel } from './delay';
 import { t } from './i18n';
 import type { Selection } from './search';
+import { vehicleLink } from './useVehicleUrl';
 
 interface Props {
   selection: Selection | null;
@@ -20,6 +22,47 @@ function LineChip({ line }: { line: Line | undefined }) {
   return line ? (
     <span className="chip" style={{ background: line.color, color: line.textColor }}>{line.name}</span>
   ) : null;
+}
+
+const canShare = typeof navigator !== 'undefined' && (!!navigator.share || !!navigator.clipboard);
+
+/** Opens the system share sheet (Android, iOS, some desktops); elsewhere copies the link. */
+function ShareButton({ v, line }: { v: Vehicle; line: Line | undefined }) {
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) return;
+    const id = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(id);
+  }, [copied]);
+
+  const share = async () => {
+    const url = vehicleLink(v.id);
+    const text = t.shareText(line?.name ?? null, v.label, v.inService ? v.headsign : null);
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: t.appName, text, url });
+      } catch {
+        // Cancelled by the user, or the share target failed: nothing to do.
+      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+    } catch {
+      // Clipboard blocked: the link is still in the address bar.
+    }
+  };
+
+  if (!canShare) return null;
+  return (
+    <button className="share" onClick={share}>
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+        <path d="M12 3v12M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      {copied ? t.linkCopied : t.share}
+    </button>
+  );
 }
 
 function VehicleCard({ v, line, now }: { v: Vehicle; line: Line | undefined; now: number }) {
@@ -47,6 +90,7 @@ function VehicleCard({ v, line, now }: { v: Vehicle; line: Line | undefined; now
       )}
       <div className="row muted">{t.fixAge(age)}</div>
       {age > STALE_FIX_SECONDS && <div className="warn">{t.staleWarning}</div>}
+      <ShareButton v={v} line={line} />
     </div>
   );
 }

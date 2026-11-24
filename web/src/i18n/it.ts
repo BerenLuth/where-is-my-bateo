@@ -32,6 +32,10 @@ export const it = {
   early: (min: number) => `−${min} min`,
   fixAge: (s: number) => `posizione di ${s} s fa`,
   staleWarning: 'Posizione non aggiornata: la vettura potrebbe non essere dove indicato.',
+  share: 'Condividi',
+  linkCopied: 'Link copiato',
+  shareText: (line: string | null, fleet: string, headsign: string | null) =>
+    [line && `Linea ${line}`, `vettura ${fleet}`].filter(Boolean).join(', ') + (headsign ? ` → ${headsign}` : ''),
   noVehiclesForSelection: 'Nessuna vettura in servizio per questa selezione.',
   kinds: { bus: 'Bus', tram: 'Tram', boat: 'Battelli' },
   kindOne: { bus: 'Bus', tram: 'Tram', boat: 'Battello' },

@@ -41,6 +41,8 @@ main { position: relative; flex: 1; min-height: 0; }
 .panel .close { position: absolute; top: 6px; right: 8px; border: 0; background: none; color: var(--muted); }
 .card { display: grid; gap: 4px; margin-bottom: 8px; }
 .card-head { display: flex; gap: 8px; align-items: center; padding-right: 22px; }
+.share { justify-self: start; display: inline-flex; gap: 6px; align-items: center; margin-top: 4px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.share:hover { background: var(--line); }
 .tag { font-size: 11px; background: var(--line); border-radius: 4px; padding: 0 5px; }
 .muted { color: var(--muted); }
 .warn { background: var(--warn-bg); padding: 4px 8px; border-radius: 6px; font-size: 12px; }

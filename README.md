@@ -13,6 +13,7 @@ Data comes from ACTV's open data catalogue: [actv.avmspa.it](https://actv.avmspa
 - **Delay badge** on every vehicle: green up to 3 min late, amber up to 5, red beyond, blue when early.
 - **Search** by line (`24H`, `T1`), fleet number (`587`) or destination (`Piazzale Roma`). A line shows all its vehicles and its route; a vehicle opens a card with delay, next stop and expected arrival.
 - **Ghosts:** a lighter marker moves along the route toward the next stop, timed to its expected arrival, and glides to the real position on each update. Positions older than 2 minutes are greyed out and get no ghost.
+- **Share a vehicle:** the open vehicle's id goes in the URL (`?v=aut:1234`), so the link opens the app on it. *Condividi* in its card opens the Android / iOS share sheet (on desktops without one it copies the link). The browser back button closes the open vehicle; with nothing open it behaves normally.
 - **Dark theme:** the ☾/☀ button in the header switches to a dark theme with a plain dark basemap (the standard tiles desaturated and inverted in the browser, so no API key is needed). It follows your system setting at first and remembers your choice; `?theme=dark` or `?theme=light` in the URL overrides it.
 - **Mobile layout:** on small screens the search box and the ☾ / ⟳ / ⚙ buttons share one row; ⚙ opens a bottom sheet with the toggles (estimated positions, out-of-service, Bus / Tram / Battelli), the vehicle count and the feed age. Selecting a line or vehicle opens a bottom panel; pinch to zoom.
 - **Installable (PWA):** can be installed to the home screen / desktop as a standalone app; see [Install as an app](#install-as-an-app-pwa).
@@ -38,7 +39,7 @@ For phone testing, run `npm run dev:host` and open the `Network:` URL Vite print
 
 The production build is a Progressive Web App: a manifest, icons and a service worker that precaches the app shell, so it opens instantly and can be installed.
 
-- **Needs HTTPS** (or `localhost`). Browsers only register service workers and offer installation in a secure context, so the plain-HTTP LAN address (`http://192.168.x.x:8080`, or `npm run dev:host`) works as a normal web page but is not installable. For phone testing use the `cloudflared` HTTPS tunnel below, or any HTTPS deployment.
+- **Needs HTTPS** (or `localhost`). Browsers only register service workers and offer installation in a secure context, so the plain-HTTP LAN address (`http://192.168.x.x:3542`, or `npm run dev:host`) works as a normal web page but is not installable. For phone testing use the `cloudflared` HTTPS tunnel below, or any HTTPS deployment.
 - **Android (Chrome):** menu → *Install app* / *Add to Home screen*.
 - **iOS (Safari):** Share → *Add to Home Screen*.
 - **Desktop (Chrome/Edge):** the install icon in the address bar.
@@ -48,16 +49,16 @@ The production build is a Progressive Web App: a manifest, icons and a service w
 ## Run with Docker
 
 ```
-docker compose up -d --build     # then open http://localhost:8080
+docker compose up -d --build     # then open http://localhost:3542
 PORT=9000 docker compose up -d   # use another port
 docker compose down              # stop
 ```
 
-One container serves both the API and the web app. It needs about 400 MB of RAM and takes ~10 s to start; downloaded ACTV data is cached in the `actv-cache` volume. The container uses `network_mode: host`, so it listens on the host's port directly (Linux only; on Docker Desktop for Mac/Windows remove that line and add `ports: ["8080:8080"]`).
+One container serves both the API and the web app. It needs about 400 MB of RAM and takes ~10 s to start; downloaded ACTV data is cached in the `actv-cache` volume. The container uses `network_mode: host`, so it listens on the host's port directly (Linux only; on Docker Desktop for Mac/Windows remove that line and add `ports: ["3542:3542"]`).
 
 **Sharing with friends**
-- Same network: give them `http://<your-machine-ip>:8080`.
-- Over the internet without opening ports: `cloudflared tunnel --url http://localhost:8080` prints a public https link.
+- Same network: give them `http://<your-machine-ip>:3542`.
+- Over the internet without opening ports: `cloudflared tunnel --url http://localhost:3542` prints a public https link.
 - On a server or small VPS: copy the repo, run the same `docker compose` command and put Caddy or nginx in front for HTTPS.
 
 **Map tiles:** the default uses the public OpenStreetMap tile servers, which is fine for a few friends but not for public traffic. To use another provider, set `VITE_TILE_URL` and `VITE_TILE_ATTRIBUTION` (and `VITE_TILE_URL_DARK` / `VITE_TILE_ATTRIBUTION_DARK` to use a real dark basemap instead of the built-in restyle) under `build.args` in `docker-compose.yml` and rebuild.

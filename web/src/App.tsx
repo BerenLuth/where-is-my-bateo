@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { fetchShape, type Vehicle, type VehicleKind } from './api';
 import { MapView, type Focus, type ShapeOverlay } from './MapView';
 import { Panel } from './Panel';
@@ -7,6 +7,7 @@ import { matches, type Selection } from './search';
 import { t } from './i18n';
 import { useNow, useOnline, useSnapshot } from './useSnapshot';
 import { useTheme } from './useTheme';
+import { useVehicleUrl, vehicleFromUrl } from './useVehicleUrl';
 
 const MAX_SHAPES = 6;
 
@@ -17,7 +18,10 @@ export function App() {
   const online = useOnline();
   const errorText = online ? t.loadError : t.offline;
   const { theme, toggle: toggleTheme } = useTheme();
-  const [selection, setSelection] = useState<Selection | null>(null);
+  const [selection, setSelection] = useState<Selection | null>(() => {
+    const id = vehicleFromUrl();
+    return id ? { kind: 'vehicle', id } : null;
+  });
   const [pickedVehicle, setPickedVehicle] = useState<string | null>(null);
   const [showGhosts, setShowGhosts] = useState(true);
   const [showOut, setShowOut] = useState(false);
@@ -37,10 +41,11 @@ export function App() {
     return allVehicles.filter((v) => v.inService || showOut);
   }, [snapshot, allVehicles, selection, selected, showOut, pickedVehicle]);
 
-  const selectedVehicle: Vehicle | null = useMemo(() => {
-    const id = pickedVehicle ?? (selection?.kind === 'vehicle' ? selection.id : null);
-    return snapshot?.vehicles.find((v) => v.id === id) ?? null;
-  }, [snapshot, pickedVehicle, selection]);
+  const openId = pickedVehicle ?? (selection?.kind === 'vehicle' ? selection.id : null);
+  const selectedVehicle: Vehicle | null = useMemo(
+    () => snapshot?.vehicles.find((v) => v.id === openId) ?? null,
+    [snapshot, openId],
+  );
 
   const focusOn = useCallback((vs: Vehicle[]) => {
     setFocus((f) => ({ nonce: (f?.nonce ?? 0) + 1, points: vs.map((v) => [v.lat, v.lon]) }));
@@ -64,6 +69,24 @@ export function App() {
     setSelection(null);
     setPickedVehicle(null);
   };
+
+  // Back closes the open vehicle (keeping a line or destination selection); forward reopens it.
+  useVehicleUrl(openId, (id) => {
+    if (id) return pickVehicle(id);
+    setPickedVehicle(null);
+    setSelection((s) => (s?.kind === 'vehicle' ? null : s));
+  });
+
+  // A shared link (?v=) opened the app: fly to that vehicle once data arrives, or drop it if it is gone.
+  const deepLink = useRef(openId);
+  useEffect(() => {
+    const id = deepLink.current;
+    if (!snapshot || !id) return;
+    deepLink.current = null;
+    const v = snapshot.vehicles.find((x) => x.id === id);
+    if (v) focusOn([v]);
+    else clear();
+  }, [snapshot, focusOn]);
 
   // Draw the route shapes of whatever is selected.
   const shapeKey = useMemo(() => {
